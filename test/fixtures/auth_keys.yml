@@ -1,0 +1,11 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/Fixtures.html
+
+one:
+  usergroup: MyString
+  md5: MyString
+  keydata: MyText
+
+two:
+  usergroup: MyString
+  md5: MyString
+  keydata: MyText

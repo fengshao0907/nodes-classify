@@ -1,0 +1,264 @@
+#!/usr/bin/env ruby
+#encoding: utf-8
+
+require 'optparse'
+require 'thread'
+require 'nodes'
+require 'open3'
+
+DANGEROUS_CMD = 'shutdown|reboot|halt|poweroff|init|iptables|rm|start|stop|restart|start'
+DANGEROUS_CMD_RE = /(^| |\/|&|\||;)(#{DANGEROUS_CMD})($| |&|\||;)/
+CMD_LIMIT = 10
+CMD_SEPERATOR_RE = /;|&&|\|\|/
+
+MACHINE_LIMIT = 100
+DEFAULT_STEP = 1
+@execute_step = false
+@step = 0x7fffffff
+
+trap('INT') do
+    puts '^c killed.'
+    exit 0
+end
+#++++++++++++++++++++++++++++++Start  Functions++++++++++++++++++++++++++++++++++
+def over_cmd_limit
+    #return false if @command !~ CMD_SEPERATOR_RE
+    @command.split(CMD_SEPERATOR_RE).length >= CMD_LIMIT
+end
+
+def red_dangerous_cmd(cmd)
+    cmd.split(/(#{CMD_SEPERATOR_RE})/).map{ |c| c.gsub(DANGEROUS_CMD_RE, "\\1\033[1;31m\\2\033[0m\\3") }.join
+end
+
+def read_next(default = '')
+    step = $stdin.gets.chomp.upcase
+    return step.empty? ? default : step
+end
+
+def list_machine(hosts)
+    half_decorate = '-'*40
+    @tty.printf("\n\n%s%s%s", half_decorate, 'Begin Machine List', half_decorate)
+    hosts.each { |host| @tty.printf("\n%s", host) }
+    @tty.printf("\n\033[32m%d\033[0m hosts.", hosts.length)
+    @tty.printf("\n%s%s%s\n", half_decorate, '-End Machine List-', half_decorate)
+end
+
+def flush_buffer
+    while @output_buffer.length > 0
+        host, msg = *(@output_buffer.shift)
+        @outputed += 1
+        printf("\033[0;36;40m%3d\033[0;32;40m: =============== \033[0;33;40m%-18s \033[0;32;40m===============\033[0m\n", @outputed, host)
+        puts msg
+    end
+end
+
+class ThreadPool
+    def initialize(size)
+        @size = size
+        @jobs = Queue.new
+
+        @pool = Array.new(@size) do |i|
+            Thread.new do
+                Thread.current[:id] = i
+                catch(:exit) do
+                    loop do
+                        job, args = @jobs.pop
+                        job.call(*args)
+                    end
+                end
+            end
+        end
+    end
+
+    def schedule(*args, &block)
+        @jobs << [block, args]
+    end
+
+    def shutdown
+        @size.times { schedule { throw :exit } }
+        @pool.map(&:join)
+    end
+end
+#+++++++++++++++++++++++++++++++End  Functions+++++++++++++++++++++++++++++++++++
+begin
+    ARGV.push '--help' if ARGV.first.nil?
+    @options = {}
+    OptionParser.new do |opts|
+        opts.banner = 'Usage: nodesck [-t tag-expression] [-h hostlist] [-f filename] [options] COMMAND'
+        opts.separator ''
+        opts.separator 'Options:'
+        opts.on('-t tagexpression', 'express that use nodes to list host') { |v|
+            @options[:exptype] = 'tag'
+            @expression = v
+        }
+        opts.on('-h hostname', 'hostname separator by ","') { |v|
+            @options[:exptype] = 'host'
+            @expression = v
+        }
+        opts.on('-f filename', 'filename which include hostname separator by line') { |v|
+            @options[:exptype] = 'file'
+            @expression = v
+        }
+
+        @options[:user] = 'work'
+        opts.on('-u user', '--user user', 'user to login host, default is "work"') { |v| @options[:user] = v }
+
+        opts.on('-s Status', '--status Status', 'specify the nodes status') { |v| @options[:status] = v }
+
+        @options[:exclude] = /^$/
+        opts.on('-x exclude_pattern', '--exclude exclude_pattern', 'the regular expression that match hostname which to be exclude') { |v|
+            @options[:exclude] = v
+        }
+
+        @options[:password] = false
+        opts.on('-p', '--password', 'specify the password for the nodes') { @options[:password] = true }
+
+        @options[:parallel] = 1
+        opts.on('-P parallel', '--parallel parallel', 'max number of parallel threads, default is 1') { |v| @options[:parallel] = v.to_i }
+
+        @options[:quiet] = false
+        opts.on('--quiet', 'execute quiet') { @options[:quiet] = true }
+
+        opts.on('-v', '--version', 'show nodes client version') {
+            puts Nodes::VERSION
+            exit 0
+        }
+
+        opts.on('--help', 'show this help text.') {
+            puts opts
+            exit 0
+        }
+    end.parse!
+    @command = ARGV.length > 0 ? ARGV[0] : ''
+rescue => e
+    puts e
+    exit Nodes::ILLEGAL_OPTION
+end
+
+@tty = IO.new(IO.sysopen('/dev/tty', 'a+'), 'a+') unless @options[:quiet]
+@output_buffer = []
+@outputed = 0
+
+if @options[:password]
+    require 'io/console'
+    print 'Enter you %s password:' % @options[:user]
+    $stdin.echo = false
+    @password = $stdin.gets.chomp
+    $stdin.echo = true
+    print "\n"
+end
+
+@hosts = case @options[:exptype]
+    when 'tag'
+        begin
+            res = Nodes.new.search_nodes(@expression, @options[:status], @options[:exclude])
+            raise Nodes::Exception(Nodes::ILLEGAL_OPTION, res['msg']) unless res['status'] == 0
+            res['data'].map { |node| node['name'] }
+        rescue Nodes::Exception => e
+            puts e.to_s
+            exit e.erron
+        end
+
+    when 'host'; @expression.split(',')
+
+    when 'file'
+        hosts = `cat #{@expression}`
+        unless $?.success?
+            puts hosts
+            exit Nodes::UNKNOW_ERROR
+        end
+        hosts.split(/\r|\n|\r\n/)
+
+    else; []
+end
+
+if (@hosts_num = @hosts.length) == 0
+    puts 'Please specify at least one host!'
+    exit Nodes::ILLEGAL_OPTION
+end
+
+@exec_cmd = '"%s"' % @command
+@show_cmd = red_dangerous_cmd @command
+
+if !@options[:quiet] && (@hosts_num >= MACHINE_LIMIT || @command =~ DANGEROUS_CMD_RE || over_cmd_limit)
+    tips = "\033[1;31mWARNING:\033[0mExecute command on \033[32m%d\033[0m machines:\n\033[33m" % @hosts_num
+    tips += "\tmore than %d machines!\n" % MACHINE_LIMIT if @hosts_num >= MACHINE_LIMIT
+    tips += "\twith dangerous command!\n" if @command =~ DANGEROUS_CMD_RE
+    tips += "\tmore than %d commands once!\n" % CMD_LIMIT if over_cmd_limit
+    tips += "\033[0mYour command:\t%s\n\033[32m(A)ll, (%dS)tep by step, (L)ist machine, [Q]uit:\033[0m" % [@show_cmd, DEFAULT_STEP]
+
+    while true
+        @tty.print tips
+        step = read_next('Q');
+
+        case step
+            when 'A'; break
+            when 'L'; list_machine(@hosts)
+            when 'Q'; exit 0
+            else
+                if step =~ /^(\d*)S$/
+                    @step = $1.empty? ? DEFAULT_STEP : $1.to_i
+                    @step = @hosts_num if @step > @hosts_num
+                    @execute_step = true
+                    break
+                end
+        end
+    end
+end
+
+@options[:parallel] = 1 if @command.empty?
+@threadpool = ThreadPool.new(@options[:parallel])
+@flush_buffer_mutex = Mutex.new
+@exec_proc = @command.empty? ? Proc.new do |host, shell|
+    @outputed += 1
+    printf("\033[0;36;40m%3d\033[0;32;40m: =============== \033[0;33;40m%-18s \033[0;32;40m===============\033[0m\n", @outputed, host)
+    system shell
+end : Proc.new do |host, shell|
+    @threadpool.schedule do
+        o, e, t = Open3.capture3(shell)
+        @output_buffer << [host, e+o]
+        @flush_buffer_mutex.synchronize { flush_buffer }
+    end
+end
+
+onstep = 0
+@hosts.each_index do |i|
+    if @execute_step && (onstep == 0 || onstep == @step)
+        @threadpool.shutdown
+        @flush_buffer_mutex.synchronize { flush_buffer }
+        @threadpool = ThreadPool.new(@options[:parallel])
+
+        onstep = 0
+        while true
+            @tty.printf("\033[1;31mWARNING:\033[0mWill execute \"%s\" on machines:", @show_cmd);
+            list_machine(@hosts[i, @step])
+            @tty.printf("\n\033[32m(A)ll, [%dS]tep by step, (L)ist machine, (Q)uit:\033[0m", @step)
+            step = read_next('S')
+            case step
+                when 'A'
+                    @execute_step = false
+                    break
+                when 'Q'; exit(0)
+                when 'L'; list_machine(@hosts[i..-1])
+                else
+                    if step =~ /^(\d*)S$/
+                        old_step = @step
+                        @step = $1.to_i unless $1.empty?
+                        @step = @hosts_num - i if @step > @hosts_num - i
+                        break if old_step == @step
+                    end
+            end
+        end
+    end
+
+    cmd = 'ssh -o StrictHostKeyChecking=no %s@%s %s' % [@options[:user], @hosts[i], @exec_cmd]
+    cmd = 'sshpass -p %s %s' % [@password, cmd] if @options[:password]
+    @exec_proc.call(@hosts[i], cmd)
+    onstep += 1
+end
+
+@threadpool.shutdown
+@flush_buffer_mutex.synchronize { flush_buffer }
+
+@tty.close unless @options[:quiet]
+exit 0

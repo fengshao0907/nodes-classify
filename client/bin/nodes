@@ -1,0 +1,318 @@
+#!/usr/bin/env ruby
+#encoding: utf-8
+
+require 'optparse'
+require 'nodes'
+
+#++++++++++++++++++++++++++++Start Read Options+++++++++++++++++++++++++++++++++
+trap('INT') do
+    puts '^c killed.'
+    exit 0
+end
+
+if ARGV.first.nil?
+    ARGV.push '--help'
+else
+    @subcommand = ARGV.shift
+    sc_alias = { 's' => 'search', 'i' => 'insert', 'c' => 'change', 'd' => 'delete' }
+    @subcommand = sc_alias[@subcommand] if sc_alias.has_key?(@subcommand)
+    ARGV.push((@subcommand=='-v' or @subcommand=='--version') ? '--version' : '--help') unless %w{ search insert change delete addpubkey addtag deltag tagseg addtagseg deltagseg addproject delproject taglist }.include?(@subcommand)
+end
+
+begin
+    @options={}
+    OptionParser.new do |opts|
+        opts.banner = 'Usage: nodes {search|insert|change|delete|addtag|deltag|tagseg|addtagseg|deltagseg|addproject|delproject|addpubkey} [options]'
+        opts.separator '    nodes search: Search nodes or tags'
+        opts.separator '        nodes search -p PL [-t tags] [-s STATUS] [-x exclude-nodes-expression]'
+        opts.separator '            search nodes those are suit for the expression,and by default nodes are both running and offline'
+        opts.separator '        nodes search -n node'
+        opts.separator '            search tags owned by the nodes'
+        opts.separator ''
+        opts.separator '    nodes insert: Insert nodes'
+        opts.separator '        nodes insert -p PL [-n NODENAMES [-t NODETAGS] [-s STATUS]] [--from-file FILE]'
+        opts.separator '            NODENAMES: hostname of new node,hostname should be separate by "," when multi nodes insert'
+        opts.separator '            NODETAGS: tags of new node which separate by ","'
+        opts.separator '            STATUS: default "offline"'
+        opts.separator ''
+        opts.separator '    nodes change: Change nodes'
+        opts.separator '        nodes change -p PL [-n NODENAMES [-t NODETAGS] [-s STATUS]] [--from-file FILE]'
+        opts.separator '            All of the options like insert command. attribute of node will changed when -t or -s is specified'
+        opts.separator ''
+        opts.separator '    nodes delete: Delete nodes'
+        opts.separator '        nodes delete -p PL [-n NODENAMES] [--from-file FILE]'
+        opts.separator ''
+        opts.separator '    nodes addtag: Add tag'
+        opts.separator '        nodes addtag -p PL [-t TAGS --tag-seg SEGMENT [--description DESCRIPTION]] [--from-file FILE]'
+        opts.separator ''
+        opts.separator '    nodes deltag: Del tag'
+        opts.separator '        nodes deltag -p PL [-t TAGS] [--from-file FILE]'
+        opts.separator ''
+        opts.separator '    nodes tagseg: Search segment of tag'
+        opts.separator '        nodes tagseg -p PL -t TAG'
+        opts.separator ''
+        opts.separator '    nodes addtagseg: Add segment of tag. to do this, make sure you are the root'
+        opts.separator '        nodes addtagseg --tag-seg tagseg [--description DESCRIPTION]'
+        opts.separator ''
+        opts.separator '    nodes deltagseg: Del segment of tag. to do this, make sure you are the root'
+        opts.separator '        nodes deltagseg --tag-seg tagseg [--description DESCRIPTION]'
+        opts.separator ''
+        opts.separator '    nodes addproject: Add pruduct line. to do this, make sure you are the root'
+        opts.separator '        nodes addproject -p PL [--description DESCRIPTION]'
+        opts.separator ''
+        opts.separator '    nodes delproject: Del pruduct line. to do this, make sure you are the root'
+        opts.separator '        nodes delproject -p PL [--description DESCRIPTION]'
+        opts.separator ''
+        opts.separator '    nodes addpubkey: Add pubkey to server. to do this, make sure you are the root'
+        opts.separator '        nodes addpubkey --pubkey-file file_path -p PL'
+        opts.separator ''
+        opts.separator '    nodes taglist: List tags of specific tag segment'
+        opts.separator '        nodes taglist -p PL --tag-seg tagseg'
+        opts.separator ''
+        opts.separator 'Options:'
+
+        opts.on('-n NODES', '--nodes NODES', 'specifying the search type as search node.this is default search type when both -n and -t are not specified'){
+            |v| @options[:nodes] = v
+        }
+
+        opts.on('-t TAGS', '--tags TAGS', 'specifying the search type as search tag.see also the option:-n'){
+            |v| @options[:tags] = v
+        }
+
+        opts.on('-p PL', '--project PL', 'Product Line for the nodes') {
+            |v| @options[:projects] = v
+        }
+
+        opts.on('-x exclude_pattern', '--exclude exclude_pattern', 'the regular expression that match hostname which to be exclude') {
+            |v| @options[:exclude] = v
+        }
+
+        opts.on('-h', 'human readable') {
+            |v| @options[:human_read] = true
+        }
+
+        opts.on('-s STATUS', '--status STATUS', 'node status: running or offline') {
+            |v| @options[:status] = v
+        }
+
+        opts.on('--tag-seg Segment', 'the segment of the tag') {
+            |v| @options[:segments] = v
+        }
+
+        opts.on('--description Description', 'the description of the tag') {
+            |v| @options[:description] = v
+        }
+
+        opts.on('-f File', '--from-file File', 'read options from file') {
+            |v| @options[:from_file] = v
+        }
+
+        opts.on('--pubkey-file File', 'public key file') {
+            |v| @options[:pubkey_file] = v
+        }
+
+        opts.on('-i IDENTITY_FILE', '--identify IDENTIFY_FILE', 'the private key for authenticate, default look for ~/.ssh/id_rsa or ~/.ssh/id_dsa') {
+            |v| @options[:identify_file] = v
+        }
+
+        opts.on('--service URL', 'service root url, default: http://ai-imci-control01.ai01.baidu.com:8090/nodes') {
+            |v| @options[:service] = v
+        }
+
+        @options[:debug] = false
+        opts.on('--debug', 'debug the script') {
+            @options[:debug] = true
+        }
+
+        opts.on('-v', '--version', 'show nodes client version') {
+            puts Nodes::VERSION
+            exit 0
+        }
+
+        opts.on('--help', 'show this helps message') {
+            puts opts
+            exit 0
+        }
+    end.parse!
+    puts "Options: #{@options}" if @options[:debug]
+    if ARGV.length > 0
+        puts 'invalid option: %s' % ARGV.join(' ')
+        exit Nodes::ILLEGAL_OPTION
+    end
+rescue => e
+    puts e
+    exit Nodes::ILLEGAL_OPTION
+end
+#+++++++++++++++++++++++++++++End Read Options++++++++++++++++++++++++++++++++++
+
+#++++++++++++++++++++++++++++++Start  Funtions++++++++++++++++++++++++++++++++++
+def parse_search_nodes(res)
+    if res['status'] == 1
+        puts res['msg']
+        exit Nodes::ILLEGAL_OPTION
+    end
+
+    human_put = @options[:status].nil? ? Proc.new { |node| puts "%-30s %s" % [node['name'], node['status']] } : Proc.new { |node| puts "%s" % node['name'] }
+
+    res['data'] = Array.new if res['data'].nil?
+    if @options[:human_read]
+        res['data'].each { |data| human_put.call(data) }
+        puts "#{res['data'].length} results."
+    else
+        res['data'].each { |data| puts data['name'] }
+    end
+end
+
+def parse_search_tag(res)
+    if res['status'] == 1
+        puts res['msg']
+        exit Nodes::ILLEGAL_OPTION
+    end
+
+    if @options[:human_read]
+        tags = res['data']['tags'].map { |t| "%-12s %s" % [t[0], t[1]] }
+        tags = "\n    " + tags.join("\n    ")
+    else
+        tags = res['data']['tags'].map { |t| t[1] }
+        tags = tags.join(',')
+    end
+    puts "Tags: %s\nStatus: %s" % [tags, res['data']['status']]
+end
+
+def echo_write_info(r)
+    puts "\033[1;34mFailed:\033[0m\n\t%s\n" % r[:failed].join("\n\t") unless Nodes::empty?(r[:failed])
+    puts "\033[1;34mSuccessed:\033[0m\n\t%s\n" % r[:successed].join("\n\t") unless Nodes::empty?(r[:successed])
+    puts "\033[1;33m%s submitted,%s successed.\033[0m" % [r[:total], r[:success]]
+end
+
+def call_nodes
+    begin
+        yield
+    rescue Nodes::Exception => e
+        puts e.to_s
+        exit e.erron
+    end
+end
+
+def out_option?(in_list=[])
+    in_list |= [:identify_file, :service, :debug]
+    oo = {
+        :nodes => '-n/--nodes', :tags => '-t/--tags', :projects => '-p/--projects', :exclude => '-x/--exclude', :human_read => '-h',
+        :status => '-s/--status', :segments => '--tag-seg', :description => '--description', :from_file => '-f/--from-file',
+        :pubkey_file => '--pubkey-file'
+    }
+    @options.each_key do |o|
+        unless in_list.include?(o)
+            puts 'unused option: %s' % oo[o]
+            exit Nodes::ILLEGAL_OPTION
+        end
+    end
+end
+
+#++++++++++++++++++++++++++++++End  Functions+++++++++++++++++++++++++++++++++++
+#++++++++++++++++++++++++++++++++++++Main+++++++++++++++++++++++++++++++++++++++
+begin
+    @nodes = @options[:service].nil? ? Nodes.new : Nodes.new(:service_uri => @options[:service])
+    unless @nodes.legal_status?(@options[:status])
+        puts "illegal status:#{@options[:status]}"
+        exit Nodes::ILLEGAL_STATUS
+    end
+
+    case @subcommand
+        when 'search'
+            out_option?([:nodes, :tags, :projects, :exclude, :human_read, :status])
+            @options[:exclude] = /^$/ if @options[:exclude].nil?
+            @options[:status] = nil if @options[:status].nil?
+            @options[:human_read] = false if @options[:human_read].nil?
+
+            option = 7
+            @options[:nodes].nil? and option ^= 1
+            @options[:tags].nil? and option ^= 2
+            @options[:projects].nil? and option ^= 4
+            res = case option
+                when 1; @nodes.search_tags(@options[:nodes])
+                when 2; puts "you must specify the project prameter (-p PL) you want to search!"; exit Nodes::NO_PL_ERROR
+                when 4, 6; @nodes.search_nodes(@options[:projects].downcase, @options[:tags], @options[:status], @options[:exclude])
+                else
+                    puts 'illegal search options! -p/-t is search nodes and -n is search tags'
+                    exit Nodes::ILLEGAL_OPTION
+            end
+            call_nodes { option == 1 ? parse_search_tag(res) : parse_search_nodes(res) }
+
+        when 'insert'
+            out_option?([:nodes, :tags, :projects, :status, :from_file])
+            @options[:status] = 'offline' if Nodes::empty?(@options[:status])
+            call_nodes { echo_write_info @nodes.create_nodes(@options) }
+
+        when 'change'
+            out_option?([:nodes, :tags, :projects, :status, :from_file])
+            @options[:status] = nil if Nodes::empty?(@options[:status])
+            call_nodes { echo_write_info @nodes.update_nodes(@options) }
+
+        when 'delete'
+            out_option?([:nodes, :projects, :from_file])
+            call_nodes { echo_write_info @nodes.delete_nodes(@options) }
+
+        when 'addtag'
+            out_option?([:tags, :segments, :projects, :description, :from_file])
+            @options[:description] = nil if Nodes::empty?(@options[:description])
+            call_nodes { echo_write_info @nodes.create_tags(@options) }
+
+        when 'deltag'
+            out_option?([:tags, :projects, :from_file])
+            call_nodes { echo_write_info @nodes.delete_tags(@options) }
+
+        when 'tagseg'
+            out_option?([:tags, :projects])
+            call_nodes do
+                res = @nodes.search_tagseg(@options[:projects], @options[:tags])
+                if res['status'] == 1
+                    puts res['msg']
+                    exit Nodes::ILLEGAL_OPTION
+                end
+                puts res['data']
+            end
+
+        when 'addtagseg'
+            out_option?([:segments, :description])
+			@options[:description] = nil if Nodes::empty?(@options[:description])
+            call_nodes { echo_write_info @nodes.create_segments(@options) }
+
+        when 'deltagseg'
+            out_option?([:segments])
+            call_nodes { echo_write_info  @nodes.delete_segments(@options) }
+
+        when 'addproject'
+            out_option?([:projects, :description])
+			@options[:description] = nil if Nodes::empty?(@options[:description])
+            call_nodes { echo_write_info @nodes.create_projects(@options) }
+
+        when 'delproject'
+            out_option?([:projects])
+            call_nodes { echo_write_info @nodes.delete_projects(@options) }
+
+        when 'addpubkey'
+            out_option?([:pubkey_file, :projects])
+            call_nodes { @nodes.add_authkey(@options[:pubkey_file], @options[:projects], @options[:identify_file]) }
+
+        when 'taglist'
+            out_option?([:segments, :projects])
+            call_nodes do
+                res = @nodes.search_taglist(@options[:projects], @options[:segments])
+                if res['status'] == 1
+                    puts res['msg']
+                    exit Nodes::ILLEGAL_OPTION
+                end
+                puts res['data']
+            end
+
+        else
+            puts "unrecognized command:#{@subcommand}"
+            exit Nodes::UNRECOGNIZED_COMMAND
+    end
+rescue => e
+    raise e if @options[:debug]
+    puts('unknow error! please contact the developer!')
+    exit Nodes::UNKNOW_ERROR
+end
+exit 0

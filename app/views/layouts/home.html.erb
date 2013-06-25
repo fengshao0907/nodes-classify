@@ -1,0 +1,100 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+    <head>
+        <title>Nodes</title>
+        <%= stylesheet_link_tag 'ligerUI/Aqua/css/ligerui-all' %>
+        <%= javascript_include_tag 'jquery-1.7.2.min' %>
+        <%= javascript_include_tag 'ligerUI/ligerui.min' %>
+        <script type="text/javascript">
+            $(document).ready(function() {
+                viewTagInfo = function(node) {
+                    html = '<table>';
+                    html += '<tr><td>标识符</td><td>' + node.data.name + '</td></tr>';
+                    html += '<tr><td>描　述</td><td>' + node.data.description + '</td></tr>';
+                    html += '</table>';
+
+                    tab_manage.addTabItem({
+                        text: node.data.name,
+                        content: html,
+                    });
+                };
+
+                editTag = function(node) {
+                    $.ligerDialog.open({
+                        title: '编辑' + node.data.name,
+                        content: 'Edit',
+                        buttons: [
+                            {text:'提交', onclick: function(){alert('ok')}},
+                            {text:'取消', onclick: function(item,dialog){dialog.close()}},
+                        ],
+                    });
+                };
+
+                searchNodes = function(expression) {
+                    $('#server-list').ligerGrid({
+                        columns: [
+                            {display: '主机名', name: 'name', type: 'string', editor: {type: 'text'}},
+                            {display: '描　述', name: 'description', type: 'string', editor: {type: 'text'}},
+                        ],
+                        checkbox: true,
+                        enableEdit: true,
+                        method: 'get',
+                        url: '<%= url_for(:controller => "search", :action =>"nodes") %>/'+expression+'.json',
+                    });
+                };
+
+                $('#main').ligerLayout({
+                    leftWidth: 300,
+                    InWindow: true,
+                });
+
+                $('#tag-tree').ligerTree({
+                    url: "<%= url_for(:action => 'treelist') %>",
+                    textFieldName: 'name',
+                    attribute: ['id'],
+                    onAfterAppend: function() {
+                        tag_tree.collapseAll();
+                    },
+                    onContextmenu: function(node, e) {
+                        $.ligerMenu({
+                            top: 100,
+                            left: 100,
+                            width: 120,
+                            items: [
+                                {text: '查看', click: function(){viewTagInfo(node)}},
+                                {text: '编辑', click: function(){editTag(node)}},
+                                {text: '删除', click: viewTagInfo},
+                                {line: true},
+                                {text: '增加子Tag', click: viewTagInfo, disable: tag_tree.getParent(node.target)==null ? false : true},
+                                {text: '插入Tag', click: viewTagInfo},
+                            ],
+                        }).show({top: e.pageY, left: e.pageX});
+                        return false;
+                    },
+                });
+                tag_tree = $('#tag-tree').ligerGetTreeManager();
+
+                $('#framecenter').ligerTab();
+                tab_manage = $('#framecenter').ligerGetTabManager();
+            });
+        </script>
+    </head>
+    <body>
+        <div id="main" style="width:99.8%; margin:0 .1%;">
+            <div position="top" id="header">
+                header
+            </div>
+            <div position="left" id="sidebar" title="Tag Tree">
+                <ul id="tag-tree"></ul>
+            </div>
+            <div position="center" id="framecenter">
+                <div tabid="serverinfo" title="Server Info">
+                    <div id="server-list"></div>
+                </div>
+            </div>
+            <div position="bottom" id="footer">
+                footer
+            </div>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,73 @@
+#!/usr/bin/env ruby
+#encoding: utf-8
+
+require 'optparse'
+require 'nodes'
+
+trap('INT') do
+    puts '^c killed.'
+    exit 0
+end
+
+begin
+    ARGV.push '--help' if ARGV.first.nil?
+    @options = {}
+    OptionParser.new do |opts|
+        opts.banner = 'Usage: nodescp [options] FILE [USER@]TAGEXPRESSION:PATH'
+        opts.separator 'Options:'
+
+        @options[:recursive] = ''
+        opts.on('-r', 'recursively copy files') { @options[:recursive] = '-r' }
+
+        opts.on('-s Status', '--status Status', 'specify the nodes status') { |v| @options[:status] = v }
+
+        @options[:exclude] = /^$/
+        opts.on('-x exclude_pattern', '--exclude exclude_pattern', 'the regular expression that match hostname which to be exclude') { |v|
+            @options[:exclude] = v
+        }
+
+        opts.on('-v', '--version', 'show nodes client version') {
+            puts Nodes::VERSION
+            exit 0
+        }
+
+        opts.on('--help', 'show this help text.') {
+            puts opts
+            exit 0
+        }
+    end.parse!
+
+    if ARGV.length < 2
+        puts 'Invalid Options! must specify local_file_path and remote_tags:path'
+        exit Nodes::ILLEGAL_OPTION
+    end
+rescue => e
+    puts e
+    exit Nodes::ILLEGAL_OPTION
+end
+
+@expression = ARGV.pop
+@local_path = ARGV.join(' ')
+
+unless @expression.index(':')
+    puts 'Error format of remote path! should be [USER@]TAGEXPRESSTION:PATH'
+    exit Nodes::ILLEGAL_OPTION
+end
+
+@expression, @remote_path = *@expression.split(':')
+@user, @expression = *@expression.split('@') if @expression.index('@')
+@user = @user.nil? ? '' : @user+'@'
+
+begin
+    res = Nodes.new.search_nodes(@expression, @options[:status], @options[:exclude])
+    raise Nodes::Exception(Nodes::ILLEGAL_OPTION, res['msg']) unless res['status'] == 0
+    @hosts = res['data'].map { |node| node['name'] }
+rescue Nodes::Exception => e
+    puts e.to_s
+    exit e.erron
+end
+
+@hosts.each_index do |i|
+    printf("\n\033[0;36;40m%3d\033[0;32;40m: =============== \033[0;33;40m%-18s \033[0;32;40m===============\033[0m\n\n", i, @hosts[i])
+    system('scp %s %s %s%s:%s' % [@options[:recursive], @local_path, @user, @hosts[i], @remote_path])
+end

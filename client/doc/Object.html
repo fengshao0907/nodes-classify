@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+
+<title>class Object - RDoc Documentation</title>
+
+<link type="text/css" media="screen" href="./rdoc.css" rel="stylesheet">
+
+<script type="text/javascript">
+  var rdoc_rel_prefix = "./";
+</script>
+
+<script type="text/javascript" charset="utf-8" src="./js/jquery.js"></script>
+<script type="text/javascript" charset="utf-8" src="./js/navigation.js"></script>
+<script type="text/javascript" charset="utf-8" src="./js/search_index.js"></script>
+<script type="text/javascript" charset="utf-8" src="./js/search.js"></script>
+<script type="text/javascript" charset="utf-8" src="./js/searcher.js"></script>
+<script type="text/javascript" charset="utf-8" src="./js/darkfish.js"></script>
+
+
+<body id="top" class="class">
+<nav id="metadata">
+  <nav id="home-section" class="section">
+  <h3 class="section-header">
+    <a href="./index.html">Home</a>
+    <a href="./table_of_contents.html#classes">Classes</a>
+    <a href="./table_of_contents.html#methods">Methods</a>
+  </h3>
+</nav>
+
+
+  <nav id="search-section" class="section project-section" class="initially-hidden">
+  <form action="#" method="get" accept-charset="utf-8">
+    <h3 class="section-header">
+      <input type="text" name="search" placeholder="Search" id="search-field"
+             title="Type to search, Up and Down to navigate, Enter to load">
+    </h3>
+  </form>
+
+  <ul id="search-results" class="initially-hidden"></ul>
+</nav>
+
+
+  <div id="file-metadata">
+    <nav id="file-list-section" class="section">
+  <h3 class="section-header">Defined In</h3>
+  <ul>
+    <li>bin/nodes
+    <li>bin/nodesck
+  </ul>
+</nav>
+
+    
+  </div>
+
+  <div id="class-metadata">
+    
+    <nav id="parent-class-section" class="section">
+  <h3 class="section-header">Parent</h3>
+  
+  <p class="link">BasicObject
+  
+</nav>
+
+    
+    <!-- Method Quickref -->
+<nav id="method-list-section" class="section">
+  <h3 class="section-header">Methods</h3>
+
+  <ul class="link-list">
+    
+    <li><a href="#method-i-call_nodes">#call_nodes</a>
+    
+    <li><a href="#method-i-echo_write_info">#echo_write_info</a>
+    
+    <li><a href="#method-i-flush_buffer">#flush_buffer</a>
+    
+    <li><a href="#method-i-list_machine">#list_machine</a>
+    
+    <li><a href="#method-i-over_cmd_limit">#over_cmd_limit</a>
+    
+    <li><a href="#method-i-parse_search_res">#parse_search_res</a>
+    
+    <li><a href="#method-i-read_next">#read_next</a>
+    
+    <li><a href="#method-i-red_dangerous_cmd">#red_dangerous_cmd</a>
+    
+  </ul>
+</nav>
+
+  </div>
+
+  <div id="project-metadata">
+    
+    <nav id="classindex-section" class="section project-section">
+  <h3 class="section-header">Class and Module Index</h3>
+
+  <ul class="link-list">
+  
+    <li><a href="./Nodes.html">Nodes</a>
+  
+    <li><a href="./Nodes/Exception.html">Nodes::Exception</a>
+  
+    <li><a href="./Nodes/Req.html">Nodes::Req</a>
+  
+    <li><a href="./Nodes/SSLConvert.html">Nodes::SSLConvert</a>
+  
+    <li><a href="./Object.html">Object</a>
+  
+    <li><a href="./ThreadPool.html">ThreadPool</a>
+  
+  </ul>
+</nav>
+
+  </div>
+</nav>
+
+<div id="documentation">
+  <h1 class="class">class Object</h1>
+
+  <div id="description" class="description">
+    
+  </div><!-- description -->
+
+  
+  
+  
+  <section id="5Buntitled-5D" class="documentation-section">
+    
+
+    
+
+    
+    <!-- Constants -->
+    <section id="constants-list" class="section">
+      <h3 class="section-header">Constants</h3>
+      <dl>
+      
+        <dt id="CMD_LIMIT">CMD_LIMIT
+        
+        <dd class="description">
+        
+      
+        <dt id="CMD_SEPERATOR_RE">CMD_SEPERATOR_RE
+        
+        <dd class="description">
+        
+      
+        <dt id="DANGEROUS_CMD">DANGEROUS_CMD
+        
+        <dd class="description">
+        
+      
+        <dt id="DANGEROUS_CMD_RE">DANGEROUS_CMD_RE
+        
+        <dd class="description">
+        
+      
+        <dt id="DEFAULT_STEP">DEFAULT_STEP
+        
+        <dd class="description">
+        
+      
+        <dt id="MACHINE_LIMIT">MACHINE_LIMIT
+        
+        <dd class="description">
+        
+      
+      </dl>
+    </section>
+    
+
+    
+
+    <!-- Methods -->
+    
+     <section id="public-instance-5Buntitled-5D-method-details" class="method-section section">
+      <h3 class="section-header">Public Instance Methods</h3>
+
+    
+      <div id="method-i-call_nodes" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">call_nodes</span><span
+            class="method-args">() { || ... }</span>
+          <span class="method-click-advice">click to toggle source</span>
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+
+          
+          <div class="method-source-code" id="call_nodes-source">
+            <pre><span class="ruby-comment"># File bin/nodes, line 132</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">call_nodes</span>
+    <span class="ruby-keyword">begin</span>
+        <span class="ruby-keyword">yield</span>
+    <span class="ruby-keyword">rescue</span> <span class="ruby-constant">Nodes</span><span class="ruby-operator">::</span><span class="ruby-constant">Exception</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">e</span>
+        <span class="ruby-identifier">puts</span> <span class="ruby-identifier">e</span>.<span class="ruby-identifier">to_s</span>
+        <span class="ruby-identifier">exit</span> <span class="ruby-identifier">e</span>.<span class="ruby-identifier">erron</span>
+    <span class="ruby-keyword">rescue</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">e</span>
+        <span class="ruby-identifier">puts</span> <span class="ruby-identifier">e</span>.<span class="ruby-identifier">to_s</span>, <span class="ruby-identifier">e</span>.<span class="ruby-identifier">backtrace</span>.<span class="ruby-identifier">join</span>(<span class="ruby-string">&quot;\n&quot;</span>)
+        <span class="ruby-identifier">exit</span> <span class="ruby-constant">Nodes</span><span class="ruby-operator">::</span><span class="ruby-constant">UNKNOW_ERROR</span> 
+    <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- call_nodes-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- call_nodes-method -->
+
+    
+      <div id="method-i-echo_write_info" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">echo_write_info</span><span
+            class="method-args">(r)</span>
+          <span class="method-click-advice">click to toggle source</span>
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+
+          
+          <div class="method-source-code" id="echo_write_info-source">
+            <pre><span class="ruby-comment"># File bin/nodes, line 126</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">echo_write_info</span>(<span class="ruby-identifier">r</span>)
+    <span class="ruby-identifier">puts</span> <span class="ruby-string">&quot;\0033[1;34mFailed:\0033[0m\n\t%s\n&quot;</span> <span class="ruby-operator">%</span> <span class="ruby-identifier">r</span>[<span class="ruby-value">:failed</span>].<span class="ruby-identifier">join</span>(<span class="ruby-string">&quot;\n\t&quot;</span>) <span class="ruby-keyword">unless</span> <span class="ruby-constant">Nodes</span><span class="ruby-operator">::</span><span class="ruby-identifier">empty?</span>(<span class="ruby-identifier">r</span>[<span class="ruby-value">:failed</span>])
+    <span class="ruby-identifier">puts</span> <span class="ruby-string">&quot;\0033[1;34mSuccessed:\0033[0m\n\t%s\n&quot;</span> <span class="ruby-operator">%</span> <span class="ruby-identifier">r</span>[<span class="ruby-value">:successed</span>].<span class="ruby-identifier">join</span>(<span class="ruby-string">&quot;\n\t&quot;</span>) <span class="ruby-keyword">unless</span> <span class="ruby-constant">Nodes</span><span class="ruby-operator">::</span><span class="ruby-identifier">empty?</span>(<span class="ruby-identifier">r</span>[<span class="ruby-value">:successed</span>])
+    <span class="ruby-identifier">puts</span> <span class="ruby-string">&quot;\0033[1;33m%s submitted,%s successed.\0033[0m&quot;</span> <span class="ruby-operator">%</span> [<span class="ruby-identifier">r</span>[<span class="ruby-value">:total</span>], <span class="ruby-identifier">r</span>[<span class="ruby-value">:success</span>]]
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- echo_write_info-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- echo_write_info-method -->
+
+    
+      <div id="method-i-flush_buffer" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">flush_buffer</span><span
+            class="method-args">()</span>
+          <span class="method-click-advice">click to toggle source</span>
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+
+          
+          <div class="method-source-code" id="flush_buffer-source">
+            <pre><span class="ruby-comment"># File bin/nodesck, line 44</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">flush_buffer</span>
+    <span class="ruby-keyword">while</span> <span class="ruby-ivar">@output_buffer</span>.<span class="ruby-identifier">length</span> <span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>
+        <span class="ruby-identifier">host</span>, <span class="ruby-identifier">msg</span> = *(<span class="ruby-ivar">@output_buffer</span>.<span class="ruby-identifier">shift</span>)
+        <span class="ruby-ivar">@outputed</span> <span class="ruby-operator">+=</span> <span class="ruby-value">1</span>
+        <span class="ruby-identifier">printf</span>(<span class="ruby-string">&quot;\0033[0;36;40m%3d\0033[0;32;40m: =============== \0033[0;33;40m%-18s \0033[0;32;40m===============\0033[0m\n&quot;</span>, <span class="ruby-ivar">@outputed</span>, <span class="ruby-identifier">host</span>)
+        <span class="ruby-identifier">puts</span> <span class="ruby-identifier">msg</span>
+    <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- flush_buffer-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- flush_buffer-method -->
+
+    
+      <div id="method-i-list_machine" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">list_machine</span><span
+            class="method-args">(hosts)</span>
+          <span class="method-click-advice">click to toggle source</span>
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+
+          
+          <div class="method-source-code" id="list_machine-source">
+            <pre><span class="ruby-comment"># File bin/nodesck, line 36</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">list_machine</span>(<span class="ruby-identifier">hosts</span>)
+    <span class="ruby-identifier">half_decorate</span> = <span class="ruby-string">'-'</span>*<span class="ruby-value">40</span>
+    <span class="ruby-ivar">@tty</span>.<span class="ruby-identifier">printf</span>(<span class="ruby-string">&quot;\n\n%s%s%s&quot;</span>, <span class="ruby-identifier">half_decorate</span>, <span class="ruby-string">'Begin Machine List'</span>, <span class="ruby-identifier">half_decorate</span>)
+    <span class="ruby-identifier">hosts</span>.<span class="ruby-identifier">each</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">host</span><span class="ruby-operator">|</span> <span class="ruby-ivar">@tty</span>.<span class="ruby-identifier">printf</span>(<span class="ruby-string">&quot;\n%s&quot;</span>, <span class="ruby-identifier">host</span>) }
+    <span class="ruby-ivar">@tty</span>.<span class="ruby-identifier">printf</span>(<span class="ruby-string">&quot;\n\0033[32m%d\0033[0m hosts.&quot;</span>, <span class="ruby-identifier">hosts</span>.<span class="ruby-identifier">length</span>)
+    <span class="ruby-ivar">@tty</span>.<span class="ruby-identifier">printf</span>(<span class="ruby-string">&quot;\n%s%s%s\n&quot;</span>, <span class="ruby-identifier">half_decorate</span>, <span class="ruby-string">'-End Machine List-'</span>, <span class="ruby-identifier">half_decorate</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- list_machine-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- list_machine-method -->
+
+    
+      <div id="method-i-over_cmd_limit" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">over_cmd_limit</span><span
+            class="method-args">()</span>
+          <span class="method-click-advice">click to toggle source</span>
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>++++++++++++++++++++++++++++++Start 
+Functions++++++++++++++++++++++++++++++++++</p>
+          
+
+          
+          <div class="method-source-code" id="over_cmd_limit-source">
+            <pre><span class="ruby-comment"># File bin/nodesck, line 22</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">over_cmd_limit</span>
+    <span class="ruby-comment">#return false if @command !~ CMD_SEPERATOR_RE</span>
+    <span class="ruby-ivar">@command</span>.<span class="ruby-identifier">split</span>(<span class="ruby-constant">CMD_SEPERATOR_RE</span>).<span class="ruby-identifier">length</span> <span class="ruby-operator">&gt;=</span> <span class="ruby-constant">CMD_LIMIT</span>
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- over_cmd_limit-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- over_cmd_limit-method -->
+
+    
+      <div id="method-i-parse_search_res" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">parse_search_res</span><span
+            class="method-args">(res, human_put)</span>
+          <span class="method-click-advice">click to toggle source</span>
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>++++++++++++++++++++++++++++++Start 
+Funtions++++++++++++++++++++++++++++++++++</p>
+          
+
+          
+          <div class="method-source-code" id="parse_search_res-source">
+            <pre><span class="ruby-comment"># File bin/nodes, line 111</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">parse_search_res</span>(<span class="ruby-identifier">res</span>, <span class="ruby-identifier">human_put</span>)
+    <span class="ruby-keyword">if</span> <span class="ruby-identifier">res</span>[<span class="ruby-string">'status'</span>] <span class="ruby-operator">==</span> <span class="ruby-value">1</span>
+        <span class="ruby-identifier">puts</span> <span class="ruby-identifier">res</span>[<span class="ruby-string">'msg'</span>]
+        <span class="ruby-identifier">exit</span> <span class="ruby-constant">Nodes</span><span class="ruby-operator">::</span><span class="ruby-constant">ILLEGAL_OPTION</span>
+    <span class="ruby-keyword">end</span>
+
+    <span class="ruby-keyword">if</span> <span class="ruby-ivar">@options</span>[<span class="ruby-value">:human_read</span>]
+        <span class="ruby-identifier">res</span>[<span class="ruby-string">'data'</span>].<span class="ruby-identifier">each</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">data</span><span class="ruby-operator">|</span> <span class="ruby-identifier">human_put</span>.<span class="ruby-identifier">call</span>(<span class="ruby-identifier">data</span>) }
+        <span class="ruby-identifier">puts</span> <span class="ruby-node">&quot;#{res['data'].length} results.&quot;</span>
+    <span class="ruby-keyword">else</span>
+        <span class="ruby-identifier">s</span> = <span class="ruby-string">''</span>; <span class="ruby-identifier">res</span>[<span class="ruby-string">'data'</span>].<span class="ruby-identifier">each</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">data</span><span class="ruby-operator">|</span> <span class="ruby-identifier">s</span> <span class="ruby-operator">+=</span> <span class="ruby-identifier">data</span>[<span class="ruby-string">'name'</span>]<span class="ruby-operator">+</span><span class="ruby-string">' '</span> }
+        <span class="ruby-identifier">puts</span> <span class="ruby-identifier">s</span>.<span class="ruby-identifier">rstrip</span>
+    <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- parse_search_res-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- parse_search_res-method -->
+
+    
+      <div id="method-i-read_next" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">read_next</span><span
+            class="method-args">(default = '')</span>
+          <span class="method-click-advice">click to toggle source</span>
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+
+          
+          <div class="method-source-code" id="read_next-source">
+            <pre><span class="ruby-comment"># File bin/nodesck, line 31</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">read_next</span>(<span class="ruby-identifier">default</span> = <span class="ruby-string">''</span>)
+    <span class="ruby-identifier">step</span> = <span class="ruby-identifier">$stdin</span>.<span class="ruby-identifier">gets</span>.<span class="ruby-identifier">chomp</span>.<span class="ruby-identifier">upcase</span>
+    <span class="ruby-keyword">return</span> <span class="ruby-identifier">step</span>.<span class="ruby-identifier">empty?</span> <span class="ruby-operator">?</span> <span class="ruby-identifier">default</span> <span class="ruby-operator">:</span> <span class="ruby-identifier">step</span>
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- read_next-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- read_next-method -->
+
+    
+      <div id="method-i-red_dangerous_cmd" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">red_dangerous_cmd</span><span
+            class="method-args">(cmd)</span>
+          <span class="method-click-advice">click to toggle source</span>
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+
+          
+          <div class="method-source-code" id="red_dangerous_cmd-source">
+            <pre><span class="ruby-comment"># File bin/nodesck, line 27</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">red_dangerous_cmd</span>(<span class="ruby-identifier">cmd</span>)
+    <span class="ruby-identifier">cmd</span>.<span class="ruby-identifier">split</span>(<span class="ruby-node">%r(#{CMD_SEPERATOR_RE})/</span>).<span class="ruby-identifier">map</span>{ <span class="ruby-operator">|</span><span class="ruby-identifier">c</span><span class="ruby-operator">|</span> <span class="ruby-identifier">c</span>.<span class="ruby-identifier">gsub</span>(<span class="ruby-constant">DANGEROUS_CMD_RE</span>, <span class="ruby-string">&quot;\\1\0033[1;31m\\2\0033[0m\\3&quot;</span>) }.<span class="ruby-identifier">join</span>
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- red_dangerous_cmd-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- red_dangerous_cmd-method -->
+
+    
+    </section><!-- public-instance-method-details -->
+  
+  </section><!-- 5Buntitled-5D -->
+
+</div><!-- documentation -->
+
+
+<footer id="validator-badges">
+  <p><a href="http://validator.w3.org/check/referer">[Validate]</a>
+  <p>Generated by <a href="https://github.com/rdoc/rdoc">RDoc</a> 3.12.
+  <p>Generated with the <a href="http://deveiate.org/projects/Darkfish-Rdoc/">Darkfish Rdoc Generator</a> 3.
+</footer>
+

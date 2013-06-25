@@ -1,0 +1,35 @@
+# SQLite version 3.x
+#   gem install sqlite3
+#
+#   Ensure the SQLite 3 gem is defined in your Gemfile
+#   gem 'sqlite3'
+
+production:
+  adapter: mysql2
+  encoding: utf8
+  database: nodes
+  username: nodes
+  password: 'U0Rhv2Ln3-K-9u67MeXq'
+  socket: /home/work/opbin/mysql/tmp/mysqld.sock
+
+development:
+  adapter: mysql2
+  encoding: utf8
+  database: nodes
+  username: nodes
+  password: fuv5pNFtPebLp3FG
+  host: 'm1-imci-dev00.m1.baidu.com'
+  port: 8908
+  #socket: /home/zhangyunliu01/opbin/mysql-5.1.63/var/mysqld.sock
+
+# Warning: The database defined as "test" will be erased and
+# re-generated from your development database when you run "rake".
+# Do not set this db to the same as development or production.
+test:
+  adapter: mysql2
+  encoding: utf8
+  database: nodes
+  username: nodes
+  password: fuv5pNFtPebLp3FG
+  socket: /home/zhangyunliu01/opbin/mysql-5.1.63/var/mysqld.sock
+

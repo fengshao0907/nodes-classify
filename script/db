@@ -1,0 +1,46 @@
+#!/usr/bin/env ruby
+
+require File.expand_path('../../config/application',  __FILE__)
+require 'optparse'
+require 'erb'
+require 'yaml'
+
+if ARGV.first.nil?
+    ARGV.push('-h')
+else
+    @subcmd = ARGV.shift
+    ARGV.push('-h') unless %w{ help dump load }.include?(@subcmd) && @subcmd != 'help'
+end
+
+OptionParser.new do |opt|
+    opt.banner = 'Usage: db [dump|load|help] [options]'
+
+    @data_file = 'db/data.sql'
+    opt.on('-f File', 'specify the dump file or load file path,default is db/data.sql') { |v| @data_file = v }
+    @data_file = '%s/%s' % [Rails.root, @data_file]
+
+    opt.on('-h', '--help', 'show the help text.') { puts opt; exit 0 }
+
+    @env = Rails.env
+    opt.on('--env env', 'set env for connect db') { |v| @env = v }
+end.parse!
+
+unless @conf = YAML::load(ERB.new(IO.read('%s/config/database.yml' % Rails.root)).result)[@env]
+    abort "No database is configured for the environment '#{@env}'"
+end
+
+def dump
+    @mysqldump = `which mysqldump`.chomp
+    abort 'mysqldump command not found!' unless $?.success?
+
+    exit system('%s -u%s -p%s -S%s --add-drop-table %s > %s' % [@mysqldump, @conf['username'], @conf['password'], @conf['socket'], @conf['database'], @data_file])
+end
+
+def load
+    @mysql = `which mysql`.chomp
+    abort 'mysql command not found!' unless $?.success?
+
+    exit system('%s -u%s -p%s -S%s %s < %s' % [@mysql, @conf['username'], @conf['password'], @conf['socket'], @conf['database'], @data_file])
+end
+
+self.send @subcmd
