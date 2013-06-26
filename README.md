@@ -9,7 +9,7 @@
 
 ## 如何安装
 
-	git clone git://github.com/zerdliu/nodes-classify.git
+	git clone git@github.com:ops-baidu/nodes-classify.git
 	cd nodes-classify
 	bundle install
 	rails s -p 8888
